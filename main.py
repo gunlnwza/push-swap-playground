@@ -20,9 +20,12 @@ class Card:
         self.width, self.height = size
 
 class Stack:
-    def __init__(self, values=None):
+    def __init__(self, screen, values=None):
+        self.screen = screen
         self.cards = []
         self.width = SCREEN_WIDTH / 2
+        self.height = SCREEN_HEIGHT
+        self.y = 0
         if values:
             self.x = 0
             max_ = max(values)
@@ -34,26 +37,32 @@ class Stack:
         else:
             self.x = self.width
 
-    def put_on(self, screen):
-        x, y = self.x, 0
+    def put_on(self):
+        x, y = self.x, self.y
+        pg.draw.rect(self.screen, (0, 0, 0), (self.x, self.y, self.width, self.height))
         for card in self.cards:
-            pg.draw.rect(screen, card.color, (x, y, card.width, card.height))
+            pg.draw.rect(self.screen, card.color, (x, y, card.width, card.height))
             y += card.height
+        pg.display.update((self.x, self.y, self.width, self.height))
 
     def push_to(self, other: "Stack"):
         if self.cards:
             card = self.cards.pop(0)
             other.cards.insert(0, card)
+            self.put_on()
+            other.put_on()
 
     def rotate(self):
         if self.cards:
             card = self.cards.pop(0)
             self.cards.append(card)
+            self.put_on()
 
     def reverse_rotate(self):
         if self.cards:
             card = self.cards.pop()
             self.cards.insert(0, card)
+            self.put_on()
 
 def main():
     pg.init()
@@ -65,8 +74,11 @@ def main():
     random.shuffle(values)
     print(values)
 
-    stack_a = Stack(values)
-    stack_b = Stack()
+    stack_a = Stack(screen, values)
+    stack_b = Stack(screen)
+
+    stack_a.put_on()
+    stack_b.put_on()
 
     is_running = True
     while is_running:
@@ -101,11 +113,6 @@ def main():
                 elif event.key == pg.K_s:
                     stack_a.reverse_rotate()
                     stack_b.reverse_rotate()
-
-        screen.fill((0, 0, 0))
-        stack_a.put_on(screen)
-        stack_b.put_on(screen)
-        pg.display.flip()
 
     pg.quit()
 
